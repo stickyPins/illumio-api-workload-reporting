@@ -1,0 +1,5 @@
+hostname,ip_address,application,environment,status
+server-001,10.10.1.1,CRM,Production,active
+server-004,10.10.1.4,CRM,Production,active
+server-007,10.10.1.7,CRM,Production,active
+server-010,10.10.1.10,CRM,Production,active

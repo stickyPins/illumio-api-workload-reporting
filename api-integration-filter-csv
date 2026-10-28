@@ -1,0 +1,125 @@
+import csv
+import json
+import urllib.request
+import urllib.error
+
+# API configuration
+API_URL = "https://jsonplaceholder.typicode.com/users"
+
+# Simulated security workload labels
+ENVIRONMENTS = ["Production", "Development", "Testing"]
+APPLICATIONS = ["CRM", "ERP", "Finance"]
+
+
+def get_workloads():
+    """Retrieve records from the API."""
+
+    print("Connecting to API...")
+
+    request = urllib.request.Request(
+        API_URL,
+        headers={"Accept": "application/json"}
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=15) as response:
+            print(f"HTTP Status: {response.status}")
+            return json.load(response)
+
+    except urllib.error.HTTPError as error:
+        print(f"API Error: HTTP {error.code}")
+
+    except urllib.error.URLError as error:
+        print(f"Connection Error: {error.reason}")
+
+    except (TimeoutError, json.JSONDecodeError) as error:
+        print(f"Request failed: {error}")
+
+    return []
+
+
+def process_workloads(records):
+    """Convert API records into simulated workloads."""
+
+    workloads = []
+
+    for record in records:
+
+        workload_id = record["id"]
+
+        workload = {
+            "hostname": f"server-{workload_id:03d}",
+            "ip_address": f"10.10.1.{workload_id}",
+            "application": APPLICATIONS[(workload_id - 1) % 3],
+            "environment": ENVIRONMENTS[(workload_id - 1) % 3],
+            "status": "active"
+        }
+
+        workloads.append(workload)
+
+    return workloads
+
+
+def filter_production(workloads):
+    """Return only production workloads."""
+
+    return [
+        workload
+        for workload in workloads
+        if workload["environment"] == "Production"
+    ]
+
+
+def export_csv(workloads):
+    """Export workloads to a CSV report."""
+
+    filename = "production_workloads.csv"
+
+    fields = [
+        "hostname",
+        "ip_address",
+        "application",
+        "environment",
+        "status"
+    ]
+
+    with open(filename, "w", newline="") as file:
+
+        writer = csv.DictWriter(file, fieldnames=fields)
+
+        writer.writeheader()
+
+        writer.writerows(workloads)
+
+    print(f"Report saved: {filename}")
+
+
+def main():
+
+    records = get_workloads()
+
+    if not records:
+        print("No workload records retrieved.")
+        return
+
+    workloads = process_workloads(records)
+
+    production = filter_production(workloads)
+
+    print("\nPRODUCTION WORKLOAD REPORT")
+    print("-" * 60)
+
+    for workload in production:
+        print(
+            f"{workload['hostname']} | "
+            f"{workload['ip_address']} | "
+            f"{workload['application']}"
+        )
+
+    export_csv(production)
+
+    print(f"\nTotal production workloads: {len(production)}")
+
+
+if __name__ == "__main__":
+    main()
